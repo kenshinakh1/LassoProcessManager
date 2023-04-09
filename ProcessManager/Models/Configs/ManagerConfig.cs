@@ -1,4 +1,6 @@
-﻿namespace ProcessManager.Models.Configs
+﻿using LassoProcessManager.Models.Rules;
+
+namespace ProcessManager.Models.Configs
 {
     public class ManagerConfig
     {
@@ -18,8 +20,13 @@
         public LassoProfile[] Profiles { get; set; }
 
         /// <summary>
-        /// List of processes and their associated lasso profile.
+        /// List of process rules.
         /// </summary>
-        public ProcessProfile[] Processes { get; set; }
+        public ProcessRule[] ProcessRules { get; set; }
+
+        /// <summary>
+        /// List of folders rules.
+        /// </summary>
+        public FolderRule[] FolderRules { get; set; }
     }
 }

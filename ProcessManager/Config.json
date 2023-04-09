@@ -34,9 +34,15 @@
       "DelayMS": 1000
     }
   ],
-  "Processes": [
+  "ProcessRules": [
     {
-      "Name": "QRSL",
+      "ProcessName": "QRSL",
+      "Profile": "Cache"
+    }
+  ],
+  "FolderRules": [
+    {
+      "FolderPath": "C:\\Games",
       "Profile": "Cache"
     }
   ]

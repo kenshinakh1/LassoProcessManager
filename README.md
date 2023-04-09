@@ -99,10 +99,18 @@ I provide some sample profiles below:
   ],
 ```
 
-### `Processes`
-Array of `ProcessProfile` in json format.
+### `ProcessRules`
+Array of `ProcessRule` in json format.
 
-`ProcessProfile` has the following properties:
-1. `Name` - `string` value of the process name. Usually extension is not needed here.
+`ProcessRule` has the following properties:
+1. `ProcessName` - `string` value of the process name. Usually extension is not needed here.
 2. `Profile` - `string` value of the `LassoProfile`'s name to load when this process is found.
+
+### `FolderRules`
+Array of `FolderRule` in json format.
+
+`FolderRule` has the following properties:
+1. `FolderPath` - `string` value of the folder path. This is the base folder where all exe or processes below this folder path will be a match for this rule. Make sure to escape backward slash from Windows path.
+ie. `C:\Games\Game1` should be `C:\\Games\\Game1`.
+2. `Profile` - `string` value of the `LassoProfile`'s name to load.
 

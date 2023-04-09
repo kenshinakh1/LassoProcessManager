@@ -1,4 +1,5 @@
-﻿using ProcessManager.Models.Configs;
+﻿using LassoProcessManager.Models.Rules;
+using ProcessManager.Models.Configs;
 
 namespace ProcessManager.Providers
 {
@@ -9,5 +10,13 @@ namespace ProcessManager.Providers
         /// </summary>
         /// <returns></returns>
         ManagerConfig GetManagerConfig();
+
+        /// <summary>
+        /// Geth the list of lasso rules.
+        /// </summary>
+        /// <returns></returns>
+        List<BaseRule> GetRules();
+
+        Dictionary<string, LassoProfile> GetLassoProfiles();
     }
 }

@@ -1,4 +1,5 @@
-﻿using ProcessManager.Models.Configs;
+﻿using LassoProcessManager.Models.Rules;
+using ProcessManager.Models.Configs;
 using ProcessManager.Providers;
 using System.Diagnostics;
 using System.Management;
@@ -7,8 +8,8 @@ namespace ProcessManager.Managers
 {
     public class LassoManager : ILassoManager
     {
-        private Dictionary<string, LassoProfile> lassoProfiles = new Dictionary<string, LassoProfile>();
-        private Dictionary<string, ProcessProfile> processProfiles = new Dictionary<string, ProcessProfile>();
+        private Dictionary<string, LassoProfile> lassoProfiles;
+        private List<BaseRule> rules;
         private ManagerConfig config;
         private ManagementEventWatcher processStartEvent;
 
@@ -49,26 +50,8 @@ namespace ProcessManager.Managers
         private void LoadConfig()
         {
             config = ConfigProvider.GetManagerConfig();
-
-            // Load lasso profiles
-            foreach (var profile in config.Profiles)
-            {
-                if (!lassoProfiles.ContainsKey(profile.Name))
-                {
-                    // Convert affinitymask hex to UInt64
-                    profile.AffinityMask = Convert.ToUInt64(profile.AffinityMaskHex, 16);
-                    lassoProfiles.Add(profile.Name, profile);
-                }
-            }
-
-            // Load process profiles
-            foreach (var profile in config.Processes)
-            {
-                if (!processProfiles.ContainsKey(profile.Name))
-                {
-                    processProfiles.Add(profile.Name, profile);
-                }
-            }
+            rules = ConfigProvider.GetRules();
+            lassoProfiles = ConfigProvider.GetLassoProfiles();
         }
 
         private void SetupProfilesForAllProcesses()
@@ -77,7 +60,8 @@ namespace ProcessManager.Managers
             Dictionary<string, int> successCount = new Dictionary<string, int>();
             foreach (var process in Process.GetProcesses())
             {
-                bool success = TrySetProcessProfile(process, out string profileName);
+                LassoProfile lassoProfile = GetLassoProfileForProcess(process);
+                bool success = TrySetProcessProfile(process, lassoProfile, out string profileName);
                 if (success)
                 {
                     if (!successCount.ContainsKey(profileName))
@@ -99,44 +83,44 @@ namespace ProcessManager.Managers
             LogProvider.Log($"{failCount} processes failed to set profile.");
         }
 
-        private bool TrySetProcessProfile(Process process, out string profile)
+        private bool TrySetProcessProfile(Process process, LassoProfile lassoProfile, out string profileName)
         {
-            if (process == null)
+            if (process is null)
             {
-                profile = null;
+                profileName = null;
+                return false;
+            }
+
+            if (lassoProfile is null)
+            {
+                LogProvider.Log($"No profile applied on Process '{process.ProcessName}' (ID:{process.Id}).");
+                profileName = null;
                 return false;
             }
 
             try
-            {
-                LassoProfile lassoProfile = GetLassoProfileForProcessName(process.ProcessName);
-                
-                if (lassoProfile == null)
-                {
-                    LogProvider.Log($"No profile applied on Process '{process.ProcessName}' (ID:{process.Id}).");
-                    profile = null;
-                    return false;
-                }
-
-                process.ProcessorAffinity = (IntPtr)lassoProfile.AffinityMask;
+            {   
+                process.ProcessorAffinity = (IntPtr)lassoProfile.GetAffinityMask();
 
                 LogProvider.Log($"Applied profile '{lassoProfile.Name}' on Process '{process.ProcessName}' (ID:{process.Id}).");
-                profile = lassoProfile.Name;
+                profileName = lassoProfile.Name;
                 return true;
             }
-            catch
+            catch (Exception ex)
             {
                 LogProvider.Log($"Failed to set profile for Process '{process.ProcessName}' (ID:{process.Id}).");
-                profile = null;
+                profileName = null;
                 return false;
             }
         }
 
-        private LassoProfile GetLassoProfileForProcessName(string name)
+        private LassoProfile GetLassoProfileForProcess(Process process)
         {
-            if (processProfiles.ContainsKey(name))
+            var matchingRule = rules.Where(e => e.IsMatchForRule(process)).FirstOrDefault();
+
+            if (matchingRule is { })
             {
-                string profileName = processProfiles[name].Profile;
+                string profileName = matchingRule.Profile;
                 if (lassoProfiles.ContainsKey(profileName))
                 {
                     return lassoProfiles[profileName];
@@ -165,7 +149,7 @@ namespace ProcessManager.Managers
                 int processId = Convert.ToInt32(e.NewEvent.Properties["ProcessID"].Value);
                 var process = Process.GetProcessById(processId);
 
-                LassoProfile lassoProfile = GetLassoProfileForProcessName(process.ProcessName);
+                LassoProfile lassoProfile = GetLassoProfileForProcess(process);
 
                 // Delay setting the profile if delay is defined
                 if (lassoProfile.DelayMS > 0)
@@ -173,7 +157,7 @@ namespace ProcessManager.Managers
                     await Task.Delay(lassoProfile.DelayMS);
                 }
 
-                TrySetProcessProfile(process, out _);
+                TrySetProcessProfile(process, lassoProfile, out _);
             }
             catch { }
         }
