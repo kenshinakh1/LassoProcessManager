@@ -1,4 +1,5 @@
-﻿using ProcessManager.Managers;
+﻿using Microsoft.Extensions.Logging;
+using ProcessManager.Managers;
 using ProcessManager.Providers;
 using System.Diagnostics;
 using System.Management;
@@ -9,17 +10,18 @@ namespace ProcessManager
     {
         static void Main(string[] args)
         {
-            ILogProvider logProvider = new LogProvider();
-            IConfigProvider configProvider = new ConfigProvider(logProvider);
-            using ILassoManager lassoManager = new LassoManager(configProvider, logProvider);
+            using var factory = LoggerFactory.Create(builder => builder.AddConsole());
+            var logger = factory.CreateLogger("LassoProcessManager");
+            var configProvider = new ConfigProvider(logger);
+            using var lassoManager = new LassoManager(configProvider, logger);
 
-            Console.WriteLine("Initializing ProcessManager...");
+            logger.Log(LogLevel.Information, "Initializing ProcessManager...");
 
             lassoManager.Setup();
 
-            Console.WriteLine("Finished initializing.");
+            logger.Log(LogLevel.Information, "Finished initializing.");
 
-            Console.WriteLine("Type 'q' to Exit.");
+            logger.Log(LogLevel.Information, "Type 'q' to Exit.");
 
             string input = Console.ReadLine();
             while (input != "q")
@@ -27,7 +29,8 @@ namespace ProcessManager
                 input = Console.ReadLine();
             }
 
-            Console.WriteLine("Exiting ProcessManager.");
+            //lassoManager.ResetProfilesForAllProcesses();
+            logger.Log(LogLevel.Information, "Exiting ProcessManager.");
         }
     }
 }

@@ -1,4 +1,5 @@
 ﻿using LassoProcessManager.Models.Rules;
+using Microsoft.Extensions.Logging;
 using Newtonsoft.Json;
 using ProcessManager.Models.Configs;
 using System.Reflection;
@@ -9,16 +10,17 @@ namespace ProcessManager.Providers
     {
         private const string ConfigFileName = "Config.json";
         private ManagerConfig managerConfig;
+        private ILogger logger;
 
-        private ILogProvider LogProvider { get; set; }
-
-        public ConfigProvider(ILogProvider logProvider)
-            => this.LogProvider = logProvider;
+        public ConfigProvider(ILogger logger)
+            => this.logger = logger;
 
         public ManagerConfig GetManagerConfig()
         {
             if (managerConfig != null)
+            {
                 return managerConfig;
+            }
 
             string configPath = GetConfigFilePath();
             try
@@ -28,7 +30,7 @@ namespace ProcessManager.Providers
             }
             catch
             {
-                LogProvider.Log($"Failed to load config at '{configPath}'.");
+                logger.Log(LogLevel.Error, $"Failed to load config at '{configPath}'.");
             }
 
             return null;
@@ -36,7 +38,10 @@ namespace ProcessManager.Providers
 
         public List<BaseRule> GetRules()
         {
-            List<BaseRule> rules = new List<BaseRule>();
+            var rules = new List<BaseRule>();
+
+            // Rule ordering matters here. 
+            // Process first, then folders.
             rules.AddRange(managerConfig.ProcessRules);
             rules.AddRange(managerConfig.FolderRules);
 
@@ -45,7 +50,7 @@ namespace ProcessManager.Providers
 
         public Dictionary<string, LassoProfile> GetLassoProfiles()
         {
-            Dictionary<string, LassoProfile> lassoProfiles = new Dictionary<string, LassoProfile>();
+            var lassoProfiles = new Dictionary<string, LassoProfile>();
 
             // Load lasso profiles
             foreach (var profile in managerConfig.Profiles)

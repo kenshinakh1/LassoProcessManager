@@ -3,5 +3,6 @@
     public interface ILassoManager : IDisposable
     {
         bool Setup();
+        void ResetProfilesForAllProcesses();
     }
 }
