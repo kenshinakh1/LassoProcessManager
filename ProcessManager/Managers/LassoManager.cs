@@ -1,4 +1,6 @@
-﻿using LassoProcessManager.Models.Rules;
+﻿using LassoProcessManager.Helpers;
+using LassoProcessManager.Models;
+using LassoProcessManager.Models.Rules;
 using Microsoft.Extensions.Logging;
 using ProcessManager.Models.Configs;
 using ProcessManager.Providers;
@@ -111,6 +113,12 @@ namespace ProcessManager.Managers
             try
             {   
                 process.ProcessorAffinity = (IntPtr)lassoProfile.GetAffinityMask();
+
+                // Set the process priority
+                process.PriorityClass = lassoProfile.ProcessPriority;
+
+                // Set the I/O priority
+                IOPriorityHelper.SetIoPriority(process, lassoProfile.IoPriority);
 
                 logger.Log(LogLevel.Information, $"Applied profile '{lassoProfile.Name}' on Process '{process.ProcessName}' (ID:{process.Id}).");
                 profileName = lassoProfile.Name;

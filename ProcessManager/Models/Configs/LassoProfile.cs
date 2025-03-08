@@ -1,4 +1,7 @@
-﻿namespace ProcessManager.Models.Configs
+﻿using LassoProcessManager.Models;
+using System.Diagnostics;
+
+namespace ProcessManager.Models.Configs
 {
     public class LassoProfile
     {
@@ -17,6 +20,16 @@
         /// Delay in milliseconds for setting profile.
         /// </summary>
         public int DelayMS { get; set; }
+
+        /// <summary>
+        /// IO priority
+        /// </summary>
+        public IoPriority IoPriority { get; set; } = IoPriority.Normal;
+
+        /// <summary>
+        /// Process priority
+        /// </summary>
+        public ProcessPriorityClass ProcessPriority {  get; set; } = ProcessPriorityClass.Normal;
 
         /// <summary>
         /// Get Parsed affinity mask in UInt64.

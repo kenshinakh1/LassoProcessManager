@@ -5,9 +5,11 @@
     {
       // Calculate affinity mask hex using https://bitsum.com/tools/cpu-affinity-calculator/
       "Name": "Cache",
-      "Description": "Cache profile on CCD0 with 3dvcache. Processors 0-15.",
+      "Description": "Cache profile on CCD0 with 3dvcache. Processors 0-15. IO & Process Priority high.",
       "AffinityMaskHex": "0x000000000000FFFF",
-      "DelayMS": 0
+      "DelayMS": 0,
+      "IOPriority": "High",
+      "ProcessPriority": "High"
     },
     {
       "Name": "Frequency",
@@ -41,15 +43,15 @@
     }
   ],
   "ProcessRules": [
-    {
-      "ProcessName": "QRSL",
-      "Profile": "Cache"
-    }
+    //{
+    //  "ProcessName": "ExampleGame",
+    //  "Profile": "Cache"
+    //}
   ],
   "FolderRules": [
-    {
-      "FolderPath": "C:\\Games",
-      "Profile": "Cache"
-    }
+    //{
+    //  "FolderPath": "C:\\ExampleGameFolder",
+    //  "Profile": "Cache"
+    //}
   ]
 }
